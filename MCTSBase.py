@@ -56,7 +56,7 @@ class MCTSBase:
         :param game: the Gomoku game
         '''
         self.game = game
-
+        
     @abstractmethod
     def reset(self):
         '''
@@ -106,13 +106,15 @@ class MCTSBase:
 
     def getActionProb(self, state, n_search):
         """
-        This function performs n_search MCTS starting from the state.
+        This function runs MCTS algorithm n_search times starting from the state.
         state: the root state of the MCTSs
-        n_search: number of NCTS to be performed
+        n_search: number of MCTS to be performed
         Returns:
-            probs: a policy matrix the size of the board. The (i, j) entry of the matrix gives the probability of putting a piece at that locationan.
+            probs: a policy matrix the size of the board. The (i, j) entry of the matrix gives the probability of putting a piece at that location.
         """
         for i in range(n_search):
+            print(f"In MCTS iteration {i}")
+            print()
             self.search(state.copy())
 
         counts = self.get_visit_count(state)
@@ -121,36 +123,41 @@ class MCTSBase:
     def search(self, standardState, game_end=None):
         """
         This function performs one iteration of MCTS. It is recursively called
-        till a leaf node is found. The action chosen at each node is one that
-        has the maximum upper confidence bound as in the paper.
-        Once a leaf node is found, the neural network is called to return an
-        initial policy P and a value v for the state. This value is propagated
-        up the search path. In case the leaf node is a terminal state, the
-        outcome is propagated up the search path. The values along the path are
-        updated.
+        till a leaf node is found [Expansion]
+
+        The action chosen at each node is one that has the maximum upper confidence bound as in the paper [Selection]
+        
+        Once a leaf node is found, the neural network is called to return an initial policy P and a value v for the state. This value is propagated
+        up the search path [Backpropagation]
+        
+        In case the leaf node is a terminal state, the outcome is propagated up the search path [Move]
+        
+        The values along the path areupdated.
         NOTE: the return values are the negative of the value of the current
         state. This is done because if v is the value of a
         state for the current player, then its value is -v for the other player.
         Returns:
             v: the negative of the value of the current standardState
         """
-        print('reach state:', standardState)
+        # print('reach state:', standardState) #! 11/19/2023 turn this back on
         n = self.get_treenode(standardState)
+
         if n is None:
             n = self.new_tree_node(standardState, game_end)  # Expansion
             print('create new tree node: (terminal, value)=', n.is_terminal(), n.value())
             return -n.value()
 
+        # Don't chose action if the node is the final value
         if n.is_terminal():
-            print('terminal state, value=', n.value())
+            print('terminal state reached, value=', n.value())
             return -n.value()
 
-        a = n.find_action()  # Selection
+        a = n.find_action()  # Selection, finds it for the new node
         print('search through action:', a)
-        next_state, end = self.execute_move(standardState, a)
+        #print(f"This node's best action is (x,y): {a[0],a[1]}")
 
+        next_state, end = self.execute_move(standardState, a) 
         v = self.search(next_state, end)
-
         n.update(v)  # Backup
         return -v
 
