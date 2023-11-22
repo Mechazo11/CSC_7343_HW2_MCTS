@@ -1,6 +1,13 @@
 # -*- coding: utf-8 -*-
 ##
 # Copyright 2020 Jian Zhang, All rights reserved
+# Modified by Azmyin Md. Kamal
+
+"""
+Enviornment: Python 3.10, Numpy >= 1.24.0
+Issue: using np.init throws a depriciation error that prevents Gomoku class from initializing
+"""
+
 ##
 import logging as log
 import numpy as np
@@ -32,7 +39,7 @@ class Gomoku:
     def __init__(self, board_sz=11, gui=False):
         super().__init__()
         self.board_sz = board_sz
-        self.board = np.zeros((2, board_sz, board_sz), dtype=np.int)
+        self.board = np.zeros((2, board_sz, board_sz), dtype=int) # changed from np.init which throws a depriciation error
         self.number = np.zeros((board_sz, board_sz), dtype=int)
         self.k = 1  # step number
         self.result = 0
@@ -159,6 +166,7 @@ if __name__ == "__main__":
     g = Gomoku(11, True)
     p1 = GUIPlayer(1, g.gui)
     p2 = NeuralMCTSPlayer(g, 100)
+    #p2 = GUIPlayer(-1, g.gui) # If a human player is desired as opponent
 
     print('start GUI game, close window to exit.')
     g.play(p1, p2)
